@@ -1,0 +1,15 @@
+Graph has 30919 nodes
+Graph has 1416411 edges
+Graph density: 0.00148167331319
+Average input degree: 45
+Minimal input degree: 0
+Maximal input degree: 5554
+Average output degree: 45
+Minimal output degree: 0
+Maximal output degree: 4165
+Average weight: 278
+Minimal weight: 1
+Maximal weight: 52119
+Average page rank: 3.23425725282e-05
+Minimal page rank: 5.40121449196e-06
+Maximal page rank: 0.0245309934958
