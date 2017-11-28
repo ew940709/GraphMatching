@@ -62,7 +62,7 @@ def create_social_network(conn):
                             "FROM comments as c1 "
                             "WHERE c1.id = c.parentcomment_id) as parent_comment_author "
                        "FROM comments as c "
-                       "JOIN posts as p on p.id = c.post_id")
+                       "JOIN posts as p on p.id = c.post_id ")
 
         graph = create_graph(cursor)
         cursor.close()
