@@ -1,5 +1,7 @@
 Graph has 30919 nodes
 Graph has 1416411 edges
+Max diameter: 7
+Max radius: 4
 Graph density: 0.00148167331319
 Average input degree: 45
 Minimal input degree: 0
@@ -13,3 +15,6 @@ Maximal weight: 52119
 Average page rank: 3.23425725282e-05
 Minimal page rank: 5.40121449196e-06
 Maximal page rank: 0.0245309934958
+Average betweenness centrality: 4.09768895049e-05
+Minimal betweenness centrality: 0.0
+Maximal betweenness centrality: 0.0206100656921

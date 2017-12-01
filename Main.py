@@ -15,7 +15,7 @@ G = dbConn.create_social_network(conn)
 logging.info("Social network graph created")
 statistics = statistics.Statistics(G)
 statistics.get_statistics()
-statistics.print_statistics("stats.txt")
+
 
 
 # importExport.save(G, "test.json")
