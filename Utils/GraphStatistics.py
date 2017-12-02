@@ -158,7 +158,7 @@ class Statistics:
         self.maximum_betweennessCentrality = max(values)
         self.minimum_betweennessCentrality = min(values)
         self.betweennessCentrality_percentile = np.percentile(values, self.percentiles)
-        self.betweennessCentrality_median = np.mean(values)
+        self.betweennessCentrality_median = np.median(values)
         self.betweennessCentrality_std = np.std(values)
 
         print "Average betweenness centrality: {}".format(self.average_betweennessCentrality)
