@@ -1,10 +1,17 @@
 import logging
 import os
 import csv
-import sys
 import GraphStatistics as statistics
 
 from GraphImportExport import load
+
+
+class TimeSlot:
+    def __init__(self, graph, graph_id, date_from, date_to):
+        self.graph = graph
+        self.graph_id = graph_id
+        self.date_from = date_from
+        self.date_to = date_to
 
 
 def get_stats_for_dynamic_graphs(graphs_dir, count):
@@ -26,6 +33,31 @@ def get_stats_for_dynamic_graphs(graphs_dir, count):
                 stats = statistics.Statistics(G)
                 stats.get_statistics(get_betweenness_centrality=False, get_radius=False, get_diameter=False)
                 write_statistics_to_csv(out_file, stats, idx, date_from, date_to)
+                i += 1
+
+    out_file.close()
+
+
+def get_graph_structure_stats(graphs_dir, count):
+    out_file = open("salon24_slots_structure.csv", 'a')
+    write_headers_structure_to_file(out_file)
+
+    i = 1
+    while i < count:
+        for slot_file in os.listdir(graphs_dir):
+            logging.info(graphs_dir + slot_file)
+            if slot_file.endswith(".json") and slot_file.startswith("salon24_" + str(i) + "_"):
+                split = slot_file.split('.')
+                split = split[0].split('_')
+                idx = split[1]
+                date_from = split[2]
+                date_to = split[3]
+                logging.info(graphs_dir + slot_file)
+                graph = load(graphs_dir + slot_file)
+                slot = TimeSlot(graph, idx, date_from, date_to)
+                if i > 1:
+                    write_structure_difference_to_csv(out_file, last_slot, slot)
+                last_slot = slot
                 i += 1
 
     out_file.close()
@@ -110,6 +142,51 @@ def percent_difference_to_csv(out_file, last_row, row):
 
     line = row_id + "," + last_row_date + "," + row_date + "," + str(nodes_difference) + "," + \
            str(edges_difference) + "," + str(density_difference) + "," + str(avg_in_degree_difference) + "," + \
-           str(avg_out_degree_difference) + "," + str(avg_page_rank_difference) + "," + str(avg_weight_difference) + "\n"
+           str(avg_out_degree_difference) + "," + str(avg_page_rank_difference) + "," + str(
+        avg_weight_difference) + "\n"
 
     out_file.write(line)
+
+
+def write_headers_structure_to_file(out_file):
+    header = "id,last slot date range,current slot date range," \
+             "number of nodes in last slot,number of nodes in current slot,active nodes," \
+             "number of edges in last slot,number of edges in current slot,active edges\n"
+
+    out_file.write(header)
+
+
+def write_structure_difference_to_csv(out_file, last_slot, slot):
+    active_nodes = get_active_nodes(last_slot.graph, slot.graph)
+    active_edges = get_active_edges(last_slot.graph, slot.graph)
+    line_id = str(last_slot.graph_id) + "->" + str(slot.graph_id)
+    last_date_range = str(last_slot.date_from) + " - " + str(last_slot.date_to)
+    current_date_range = str(slot.date_from) + " - " + str(slot.date_to)
+    last_slot_nodes_count = len(last_slot.graph.nodes())
+    current_slot_nodes_count = len(slot.graph.nodes())
+    last_slot_edges_count = len(last_slot.graph.edges())
+    current_slot_edges_count = len(slot.graph.edges())
+
+    line = line_id + "," + last_date_range + "," + current_date_range + "," + str(last_slot_nodes_count) + "," \
+           + str(current_slot_nodes_count) + "," + str(active_nodes) + "," + str(last_slot_edges_count) + "," + \
+           str(current_slot_edges_count) + "," + str(active_edges) + "\n"
+
+    out_file.write(line)
+
+
+def get_active_nodes(last_graph, graph):
+    active_nodes_counter = 0
+    for node in last_graph.nodes():
+        if graph.has_node(node) is True:
+            active_nodes_counter += 1
+
+    return active_nodes_counter
+
+
+def get_active_edges(last_graph, graph):
+    active_edges_counter = 0
+    for edge in last_graph.edges():
+        if graph.has_edge(edge[0], edge[1]) is True:
+            active_edges_counter += 1
+
+    return active_edges_counter
