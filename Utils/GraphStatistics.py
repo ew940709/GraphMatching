@@ -7,7 +7,7 @@ import sys
 
 class Statistics:
     def __init__(self, graph):
-        FORMAT = FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
+        FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
         logging.basicConfig(format=FORMAT, level=logging.INFO)
 
         # temporary data
@@ -94,23 +94,36 @@ class Statistics:
     def get_diameter(self):
         logging.info("Diameter calculations")
         undirected_graph = nx.DiGraph.to_undirected(self.graph)
-        if nx.is_connected(undirected_graph) is False:
-            sub_graphs = nx.connected_component_subgraphs(undirected_graph)
-            for sg in sub_graphs:
-                self.sub_graph_diameters.append(nx.diameter(sg))
-        else:
-            self.sub_graph_diameters.append(nx.diameter(self.graph))
+        # if nx.is_connected(undirected_graph) is False:
+        sub_graphs = nx.connected_component_subgraphs(undirected_graph)
+        for sg in sub_graphs:
+            self.sub_graph_diameters.append(nx.diameter(sg))
+        # else:
+        #     self.sub_graph_diameters.append(nx.diameter(self.graph))
 
         self.graph_diameter = max(self.sub_graph_diameters)
         print "Max diameter: {}".format(self.graph_diameter)
 
     def get_radius(self):
         logging.info("Radius calculations")
-        undirected_graph = nx.DiGraph.to_undirected(self.graph)
-        if nx.is_connected(undirected_graph) is False:
-            sub_graphs = nx.connected_component_subgraphs(undirected_graph)
+        if nx.is_strongly_connected(self.graph) is False:
+            logging.info("Graph is not strongly connected")
+            sub_graphs = nx.strongly_connected_component_subgraphs(self.graph)
+
+            logging.info("------------------Subgraphs-----------------")
+
+            count = 0
             for sg in sub_graphs:
-                self.sub_graph_radius.append(nx.radius(sg))
+                count += 1
+
+            logging.info("Graph has :" + str(count) + " strongly connected subgraphs")
+
+            sub_graphs = nx.strongly_connected_component_subgraphs(self.graph)
+
+            for sg in sub_graphs:
+                logging.info("Number of nodes in subgraph is: " + str(len(sg.nodes())))
+                radius = nx.radius(sg)
+                self.sub_graph_radius.append(radius)
         else:
             self.sub_graph_radius.append(nx.radius(self.graph))
 
@@ -121,8 +134,8 @@ class Statistics:
         logging.info("Input degree calculations")
         degree_dictionary = self.graph.in_degree(self.graph.nodes())
         self.average_in_degree, self.max_in_degree, self.min_in_degree, \
-        self.in_degree_percentile, self.in_degree_median, self.in_degree_std = self.get_average_degree(
-            degree_dictionary)
+            self.in_degree_percentile, self.in_degree_median, self.in_degree_std = self.get_average_degree(
+                degree_dictionary)
 
         print "Average input degree: {}".format(self.average_in_degree)
         print "Minimal input degree: {}".format(self.min_in_degree)
@@ -136,8 +149,8 @@ class Statistics:
         logging.info("Output degree calculations")
         degree_dictionary = self.graph.out_degree(self.graph.nodes())
         self.average_out_degree, self.max_out_degree, self.min_out_degree, \
-        self.out_degree_percentile, self.out_degree_median, self.out_degree_std = self.get_average_degree(
-            degree_dictionary)
+            self.out_degree_percentile, self.out_degree_median, self.out_degree_std = self.get_average_degree(
+                degree_dictionary)
 
         print "Average output degree: {}".format(self.average_out_degree)
         print "Minimal output degree: {}".format(self.min_out_degree)
@@ -152,6 +165,7 @@ class Statistics:
         betweenness_centrality_dictionary = nx.betweenness_centrality(self.graph)
         values = []
         for value in betweenness_centrality_dictionary.itervalues():
+            logging.info("Value " + str(value))
             values.append(value)
 
         self.average_betweennessCentrality = np.mean(values)
@@ -250,3 +264,43 @@ class Statistics:
         print "Average betweenness centrality: {}".format(self.average_betweennessCentrality)
         print "Minimal betweenness centrality: {}".format(self.minimum_betweennessCentrality)
         print "Maximal betweenness centrality: {}".format(self.maximum_betweennessCentrality)
+
+    def in_degree_str(self):
+        basic = str(self.average_in_degree) + "," + str(self.min_in_degree) + "," + str(self.max_in_degree) + ","
+        percentiles = ""
+
+        for percentile in self.in_degree_percentile:
+            percentiles += str(percentile)
+            percentiles += ","
+
+        return basic + percentiles + str(self.in_degree_median) + "," + str(self.in_degree_std)
+
+    def out_degree_str(self):
+        basic = str(self.average_out_degree) + "," + str(self.min_out_degree) + "," + str(self.max_out_degree) + ","
+        percentiles = ""
+
+        for percentile in self.out_degree_percentile:
+            percentiles += str(percentile)
+            percentiles += ","
+
+        return basic + percentiles + str(self.out_degree_median) + "," + str(self.out_degree_std)
+
+    def page_rank_str(self):
+        basic = str(self.average_pageRank) + "," + str(self.minimum_pageRank) + "," + str(self.maximum_pageRank) + ","
+        percentiles = ""
+
+        for percentile in self.pageRank_percentile:
+            percentiles += str(percentile)
+            percentiles += ","
+
+        return basic + percentiles + str(self.pageRank_median) + "," + str(self.pageRank_std)
+
+    def weight_str(self):
+        basic = str(self.average_weight) + "," + str(self.minimum_weight) + "," + str(self.maximum_weight) + ","
+        percentiles = ""
+
+        for percentile in self.weight_percentile:
+            percentiles += str(percentile)
+            percentiles += ","
+
+        return basic + percentiles + str(self.weight_median) + "," + str(self.weight_std)

@@ -1,0 +1,37 @@
+Graph has 262111 nodes
+Graph has 1234877 edges
+Graph density: 1.79744191148e-05
+Average input degree: 4.71127499418
+Minimal input degree: 1
+Maximal input degree: 420
+25.0-percentile for input degree: 2.0
+50.0-percentile for input degree: 3.0
+75.0-percentile for input degree: 6.0
+90.0-percentile for input degree: 9.0
+95.0-percentile for input degree: 12.0
+99.0-percentile for input degree: 23.0
+Input degree median: 3.0
+Input degree standard deviation: 5.70791116366
+Average output degree: 4.71127499418
+Minimal output degree: 0
+Maximal output degree: 5
+25.0-percentile for output degree: 5.0
+50.0-percentile for output degree: 5.0
+75.0-percentile for output degree: 5.0
+90.0-percentile for output degree: 5.0
+95.0-percentile for output degree: 5.0
+99.0-percentile for output degree: 5.0
+Output degree median: 5.0
+Output degree standard deviation: 0.951538262093
+Average Page Rank: 3.81517753929e-06
+Minimal Page Rank: 8.30919135802e-07
+Maximal Page Rank: 0.000490823323556
+25.0-percentile for Page Rank: 1.63029420972e-06
+50.0-percentile for Page Rank: 2.69847465399e-06
+75.0-percentile for Page Rank: 4.53504491103e-06
+90.0-percentile for Page Rank: 7.0288911991e-06
+95.0-percentile for Page Rank: 9.44859502257e-06
+99.0-percentile for Page Rank: 1.90310339296e-05
+Page Rank median 2.69847465399e-06
+Page Rank standard deviation 5.181818853e-06
+Max radius: 48
