@@ -48,7 +48,8 @@ class StrongSimulation:
         return result
 
     def get_ball(self, vertex):
-        bfs_tree = nx.bfs_tree(self.graph, vertex)  # returns DiGraph
+        undirected_graph = self.graph.to_undirected()
+        bfs_tree = nx.bfs_tree(undirected_graph, vertex)  # returns DiGraph
         subgraph_nodes = []
         undirected_bfs_tree = bfs_tree.to_undirected()
         shortest_paths = nx.shortest_path_length(undirected_bfs_tree, vertex);
