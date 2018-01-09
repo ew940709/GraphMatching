@@ -142,3 +142,35 @@ def create_dynamic_graphs_for_salon24():
         start_date, end_date = get_next_date_range(start_date)
 
     conn.close()
+
+
+def create_dynamic_graphs_strong_simulation_salon24():
+    start_date, end_date = get_next_date_range_strong_simulation(None)
+
+    conn = connect()
+    i = 1
+    while start_date < datetime.datetime.strptime(DATE_RANGE_END, DATE_FORMAT):
+        cur = fetch_comments_by_date(conn, start_date, end_date)
+        graph = create_graph_for_time_slot(cur)
+        file_path = '..//Salon24_TimeSlots_strongSimulation//salon24_{0}_{1}_{2}.json'.format(i, start_date.date(), end_date.date())
+        export.save(graph, file_path)
+        cur.close()
+        i += 1
+        start_date, end_date = get_next_date_range_strong_simulation(start_date)
+
+    conn.close()
+
+
+def get_next_date_range_strong_simulation(last_start):
+    if last_start is None:
+        start_date = datetime.datetime.strptime(DATE_RANGE_START, DATE_FORMAT)
+    else:
+        start_date = last_start + datetime.timedelta(days=8)
+
+    end_date = start_date + datetime.timedelta(days=7)
+    end_date_bounds = datetime.datetime.strptime(DATE_RANGE_END, DATE_FORMAT)
+    if end_date > end_date_bounds:
+        end_date = end_date_bounds
+
+    return start_date, end_date
+    
