@@ -21,15 +21,16 @@ class StrongSimulation:
             for edge in self.query_graph.edges():
                 v = edge[0]
                 v_prim = edge[1]
-                for u in sim[v]:
-                    for u_prim in sim[v_prim]:
-                        if ball.has_edge(u, u_prim) is False:
-                            sim[v].remove(u)
-                            flag = True
+                if v in sim and v_prim in sim:
+                    for u in sim[v]:
+                        for u_prim in sim[v_prim]:
+                            if ball.has_edge(u, u_prim) is False:
+                                sim[v].remove(u)
+                                flag = True
 
         Sw = []
         for vertex in self.query_graph.nodes():
-            if len(sim[vertex]) == 0:
+            if not vertex in sim or len(sim[vertex]) == 0:
                 return []
             Sw.append((vertex, sim[vertex][0]))
 
