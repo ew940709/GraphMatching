@@ -4,27 +4,32 @@ import math
 import numpy
 import operator
 import networkx as nx
+import cPickle as pickle
 
-from TALE.NHIndex import NHIndex
+from Solution.DisjointSet import DisjointSet
+from TALE import NHIndex
 
 
-class Tale:
+class Algorithm:
 
-    def __init__(self, query_graph, db_graph, p, p_imp):
+    def __init__(self, query_graph, db_graph, p, importance_threshold, max_hops, index):
         FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
         logging.basicConfig(format=FORMAT, level=logging.INFO)
         self.query_graph = query_graph
         self.db_graph = db_graph
         self.p = p
-        self.p_imp = p_imp
+        self.max_hops = max_hops
+        self.importance_threshold = importance_threshold
+        self.index = index
         self.query_dictionary = {}
         self.bitmap = self.create_bitmap()
+        self.set, self.dict = self.set_disjoint_set_for_graph()
 
     def run_algorithm(self):
-        logging.info("TALE algorithm run method started")
-        logging.info("TALE algorithm selecting important nodes")
-        important_nodes = self.get_important_nodes()
-        logging.info("TALE algorithm bitmap probing")
+        logging.info("Algorithm run method started")
+        logging.info("Algorithm selecting important nodes")
+        important_nodes = self.get_important_nodes(False)
+        logging.info("Algorithm bitmap probing")
 
         worth_nodes = []
         for node in important_nodes:
@@ -38,7 +43,7 @@ class Tale:
 
         M_imp = self.db_graph.subgraph(worth_nodes)
 
-        logging.info("TALE algorithm matching")
+        logging.info("Algorithm matching")
         match = self.grow_match(M_imp, self.query_dictionary, self.bitmap)
         return match
 
@@ -73,7 +78,7 @@ class Tale:
         for i in range(0, bitmap.size):
             if nodes_all[i] in neighbours:
                 bitmap[i] = 1
-        return NHIndex(node, graph, nodes_all, bitmap)
+        return NHIndex.NHIndex(node, graph, nodes_all, bitmap)
 
     def bitmap_probe(self, query_node, bitmap, n, Sbit, p):
         """
@@ -261,10 +266,15 @@ class Tale:
         count = 0
         neighbours = self.query_graph.neighbors(node)
         for neighbour in neighbours:
-            if not self.db_graph.has_node(neighbour):
+            if neighbour not in self.db_graph.nodes():
                 count += 1
-
+            elif neighbour not in self.db_graph.neighbors(node):
+                count += 1
+            else:
+                if self.dict[neighbour] != self.dict[node]:
+                    count += 1
         return count
+
 
     def get_missing_neighbours_connections(self, node):
         count = 0
@@ -277,9 +287,47 @@ class Tale:
 
         return count
 
-    def get_important_nodes(self):
-        dict = nx.degree_centrality(self.db_graph)
+    def get_important_nodes(self, write_to_file = False, out_dir = None):
+
+        dict = nx.harmonic_centrality(self.db_graph)
+
         sorted_dict = sorted(dict.items(), key=operator.itemgetter(1), reverse=True)
-        number_of_items_to_get = int(math.floor(len(sorted_dict) * self.p_imp))
+        if write_to_file is True:
+            file_name = "{0}/salon24_eigenvector_centrality_{1}".format(out_dir, self.index)
+            with open(file_name, 'w') as file:
+                file.write(pickle.dumps(sorted_dict)) # use `pickle.loads` to do the reverse
+
+        number_of_items_to_get = int(math.floor(len(sorted_dict) * self.importance_threshold))
+
+        undirected = self.db_graph.to_undirected()
+
+
+        try:
+            independent_set = nx.maximal_independent_set(undirected)
+        except nx.NetworkXUnfeasible:
+            independent_set = []
+
+        result = []
+
+        for item in sorted_dict[:number_of_items_to_get]:
+            if item[0] in independent_set:
+                result.append((item[0], item[1]))
+
+        if len(result) == 0:
+            return sorted_dict[:number_of_items_to_get]
+
         # lista tupli
-        return sorted_dict[:number_of_items_to_get]
+        return result
+
+    def set_disjoint_set_for_graph(self):
+        disjoint_set = DisjointSet(self.db_graph.nodes())
+        for edge in self.db_graph.edges():
+            disjoint_set.union(edge[0],edge[1])
+        set = disjoint_set.get()
+
+        dict = {}
+        for item in set:
+            for elem in item:
+                dict[elem] = set.index(item)
+
+        return disjoint_set, dict

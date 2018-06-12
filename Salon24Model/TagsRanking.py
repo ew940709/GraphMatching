@@ -1,6 +1,7 @@
 import csv
 import datetime
 import os
+import logging
 
 from PostRanking import fetch_tags_for_one_post, fetch_most_commented_posts_per_time_slot
 from DatabaseConnection import connect as connect_to_db
@@ -66,6 +67,67 @@ def save_row(posts_row, tags, file_name, header=False):
     else:
         out_row = [posts_row[2], posts_row[1], posts_row[0], posts_row[3], '-'.join(tag for tag in tags),
                    posts_row[4][:300]]
+
+    writer.writerow(out_row)
+    out_file.close()
+
+
+########################################################################################################################
+
+def get_most_popular_tags(graphs_dir, number_from, slots_count, limit, out_dir):
+    file_name = "{0}\\tags_for_dynamic_graph.csv".format(out_dir)
+    save_to_file(None, None, None, None, file_name, True)
+    while number_from < slots_count:
+        for slot_file in os.listdir(graphs_dir):
+            if slot_file.endswith(".json") and slot_file.startswith("salon24_" + str(number_from) + "_"):
+                logging.info(graphs_dir + slot_file)
+                split = slot_file.split('.')
+                split = split[0].split('_')
+                idx = split[1]
+                date_from = split[2]
+                date_to = split[3]
+                get_most_popular_tags_for_idx(idx, date_from, date_to, limit, file_name)
+                number_from += 1
+
+
+def get_most_popular_tags_for_idx(idx, date_from, date_to, limit, file_name):
+    conn = connect_to_db()
+    cur = fetch_most_popular_tags_for_time_slot(conn, date_from, date_to, limit)
+
+    tags_row = cur.fetchone()
+    tags = []
+
+    while tags_row is not None:
+        name = tags_row[0]
+        tags.append(name)
+        tags_row = cur.fetchone()
+
+    save_to_file(idx, date_from, date_to, tags, file_name)
+
+
+def fetch_most_popular_tags_for_time_slot(conn, from_date, to_date, limit):
+    cur = conn.cursor()
+    query = "SELECT ta.name, count(ta.name) " \
+            "FROM posts AS p " \
+            "INNER JOIN posts_tags as t on t.posts_id = p.id " \
+            "INNER JOIN tags as ta on t.tags_id = ta.id " \
+            "WHERE p.date >= '{0}'::date AND p.date < '{1}'::date " \
+            "GROUP BY 1 " \
+            "ORDER BY 2 DESC " \
+            "LIMIT {2} ".format(from_date, to_date, limit)
+
+    cur.execute(query)
+    return cur
+
+
+def save_to_file(idx, date_from, date_to, tags, file_name, header=False):
+    out_file = open(file_name, 'a')
+    writer = csv.writer(out_file)
+
+    if header:
+        out_row = ["slot id", "date from", "date to", "tags"]
+    else:
+        out_row = [idx, date_from, date_to, '-'.join(tag for tag in tags)]
 
     writer.writerow(out_row)
     out_file.close()
